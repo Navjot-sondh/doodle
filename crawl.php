@@ -57,8 +57,27 @@ function getDetails($url)
     {
         return;
     }
+    $description="";
+    $keywords="";
+    $metasArray=$parser->getMetaTags();
+    foreach($metasArray as $meta){
+        if($meta ->getAttribute("name"=="description"))
+        {
+            $description=$meta->getAttribute("content");
+        }
+        if($meta->getAttribute("name")=="keywords")
+        {
+            $keywords=$meta->getAttribute("content");
+        }
+
+    }//End of foreach loop
+    $description=str_replace("\n","",$description);
+    $keywords=str_replace("\n","",$keywords);
+    echo "URL:$url,Description:$description,Keywords:$keywords";
+
     echo "URL:$url,Title:$title<br>";
 }
+
 function createLink($src,$url)
 {
     $scheme=parse_url($url)["scheme"];
@@ -87,6 +106,6 @@ function createLink($src,$url)
     return $src;
 }
 
-$startUrl="http://www.bbc.com";
+$startUrl="https://www.bbc.com/";
 followLink($startUrl);
 ?>
