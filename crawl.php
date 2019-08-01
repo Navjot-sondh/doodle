@@ -1,8 +1,29 @@
 <?php
 include("classes/DomDocumentParser.php");
-
+include("config.php");
+$alreadyFoundImage
 $alreadyCrawled=array();
 $crawling=array();
+function insertLink($url,$title,$description,$keywords)
+{
+    global $con;
+    $query=$con->prepare("INSERT INTO sites(url,title,description,keywords) VALUES(:url,:title,:description,:keywords)");
+    $query->bindParam(":url",$url);
+    $query->bindParam(":title",$title);
+    $query->bindParam(":description",$description);
+    $query->bindParam(":keywords",$keywords);
+    return $query->execute();
+}
+function linkExists($url) {
+    global $con;
+
+    $query = $con->prepare("SELECT * FROM sites WHERE url = :url");
+
+    $query->bindParam(":url", $url);
+    $query->execute();
+
+    return $query->rowCount() != 0;
+}
 function followLink($url)
 {
     global $alreadyCrawled;
@@ -73,7 +94,32 @@ function getDetails($url)
     }//End of foreach loop
     $description=str_replace("\n","",$description);
     $keywords=str_replace("\n","",$keywords);
-    echo "URL:$url,Description:$description,Keywords:$keywords";
+    if(linkExists($url))
+    {
+        echo "$url alreeady exists";
+    }
+    else if(insertLink($url,$title,$description,$keywords))
+    {
+        echo "success:$url";
+    }
+    else
+    {
+        echo "Error:Failed to insert $url<br>";
+    }
+    $imageArray=$parser->getImages();
+    foreach($imageArray as $image)
+    {
+        $src=$image->getAttribute("src");
+        $alt=$image->getAttribute("alt");
+        $title=$image->getAttribute("title");
+        if(!$title && !$alt)
+        {
+            continue;
+        }
+        $src=createLink($src,$url);
+    }
+
+    echo "URL:$url, Description:$description, Keywords:$keywords";
 
     echo "URL:$url,Title:$title<br>";
 }
